@@ -1,137 +1,283 @@
-# Подключаем модуль случайных чисел 
-import random
+import datetime
+from logging import getLogger
+from subprocess import Popen
+from subprocess import PIPE
 
- 
-# Подключаем модуль для Телеграма
+from telegram import Bot
+from telegram import Update
+from telegram import ParseMode
+from telegram import InlineKeyboardButton
+from telegram import InlineKeyboardMarkup
+from telegram import ReplyKeyboardRemove
+from telegram.ext import CallbackContext
+from telegram.ext import Updater
+from telegram.ext import CommandHandler
+from telegram.ext import MessageHandler
+from telegram.ext import Filters
+from telegram.ext import CallbackQueryHandler
+from telegram.utils.request import Request
 
-import telebot
+from apis.bittrex import BittrexClient
+from apis.bittrex import BittrexError
+from echo.config import load_config
+from echo.buttons import BUTTON1_HELP
+from echo.buttons import BUTTON2_TIME
+from echo.buttons import get_base_reply_keyboard
+from echo.utils import logger_factory
 
-# Указываем токен
 
-bot = telebot.TeleBot('1107014943:AAH_4PpKGwsBlfGUXIcYIKJsA-F2g0BAonI')
+config = load_config()
 
- 
-# Импортируем типы из модуля, чтобы создавать кнопки
+logger = getLogger(__name__)
 
-from telebot import types
+debug_requests = logger_factory(logger=logger)
 
- 
-# Заготовки для трёх предложений
 
-first = ["Сегодня — идеальный день для новых начинаний.","Оптимальный день для того, чтобы решиться на смелый поступок!","Будьте осторожны, сегодня звёзды могут повлиять на ваше финансовое состояние.","Лучшее время для того, чтобы начать новые отношения или разобраться со старыми.","Плодотворный день для того, чтобы разобраться с накопившимися делами."]
+# `callback_data` -- это то, что будет присылать TG при нажатии на каждую кнопку.
+# Поэтому каждый идентификатор должен быть уникальным
+CALLBACK_BUTTON1_LEFT = "callback_button1_left"
+CALLBACK_BUTTON2_RIGHT = "callback_button2_right"
+CALLBACK_BUTTON3_MORE = "callback_button3_more"
+CALLBACK_BUTTON4_BACK = "callback_button4_back"
+CALLBACK_BUTTON5_TIME = "callback_button5_time"
+CALLBACK_BUTTON6_PRICE = "callback_button6_price"
+CALLBACK_BUTTON7_PRICE = "callback_button7_price"
+CALLBACK_BUTTON8_PRICE = "callback_button8_price"
+CALLBACK_BUTTON_HIDE_KEYBOARD = "callback_button9_hide"
 
- 
-second = ["Но помните, что даже в этом случае нужно не забывать про","Если поедете за город, заранее подумайте про","Те, кто сегодня нацелен выполнить множество дел, должны помнить про","Если у вас упадок сил, обратите внимание на","Помните, что мысли материальны, а значит вам в течение дня нужно постоянно думать про"]
 
- 
-second_add = ["отношения с друзьями и близкими.","работу и деловые вопросы, которые могут так некстати помешать планам.","себя и своё здоровье, иначе к вечеру возможен полный раздрай.","бытовые вопросы — особенно те, которые вы не доделали вчера.","отдых, чтобы не превратить себя в загнанную лошадь в конце месяца."]
+TITLES = {
+    CALLBACK_BUTTON1_LEFT: "Новое сообщение ⚡️",
+    CALLBACK_BUTTON2_RIGHT: "Отредактировать ✏️",
+    CALLBACK_BUTTON3_MORE: "Ещё ➡️",
+    CALLBACK_BUTTON4_BACK: "Назад ⬅️",
+    CALLBACK_BUTTON5_TIME: "Время ⏰",
+    CALLBACK_BUTTON6_PRICE: "BTC 💰",
+    CALLBACK_BUTTON7_PRICE: "LTC 💰",
+    CALLBACK_BUTTON8_PRICE: "ETH 💰",
+    CALLBACK_BUTTON_HIDE_KEYBOARD: "Спрять клавиатуру",
+}
 
- 
-third = ["Злые языки могут говорить вам обратное, но сегодня их слушать не нужно.","Знайте, что успех благоволит только настойчивым, поэтому посвятите этот день воспитанию духа.","Даже если вы не сможете уменьшить влияние ретроградного Меркурия, то хотя бы доведите дела до конца.","Не нужно бояться одиноких встреч — сегодня то самое время, когда они значат многое.","Если встретите незнакомца на пути — проявите участие, и тогда эта встреча посулит вам приятные хлопоты."]
+# Глобально инициализируем клиент API Bittrex
+client = BittrexClient()
 
- 
-# Метод, который получает сообщения и обрабатывает их
 
-@bot.message_handler(content_types=['text'])
+def get_base_inline_keyboard():
+    """ Получить клавиатуру для сообщения
+        Эта клавиатура будет видна под каждым сообщением, где её прикрепили
+    """
+    # Каждый список внутри `keyboard` -- это один горизонтальный ряд кнопок
+    keyboard = [
+        # Каждый элемент внутри списка -- это один вертикальный столбец.
+        # Сколько кнопок -- столько столбцов
+        [
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON1_LEFT], callback_data=CALLBACK_BUTTON1_LEFT),
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON2_RIGHT], callback_data=CALLBACK_BUTTON2_RIGHT),
+        ],
+        [
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON_HIDE_KEYBOARD], callback_data=CALLBACK_BUTTON_HIDE_KEYBOARD),
+        ],
+        [
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON3_MORE], callback_data=CALLBACK_BUTTON3_MORE),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
 
-def get_text_messages(message):
 
-    # Если написали «Привет»
+def get_keyboard2():
+    """ Получить вторую страницу клавиатуры для сообщений
+        Возможно получить только при нажатии кнопки на первой клавиатуре
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON5_TIME], callback_data=CALLBACK_BUTTON5_TIME),
+        ],
+        [
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON6_PRICE], callback_data=CALLBACK_BUTTON6_PRICE),
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON7_PRICE], callback_data=CALLBACK_BUTTON7_PRICE),
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON8_PRICE], callback_data=CALLBACK_BUTTON8_PRICE),
+        ],
+        [
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON4_BACK], callback_data=CALLBACK_BUTTON4_BACK),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
 
-    if message.text == "/start":
 
-        # Пишем приветствие
+@debug_requests
+def keyboard_callback_handler(update: Update, context: CallbackContext):
+    """ Обработчик ВСЕХ кнопок со ВСЕХ клавиатур
+    """
+    query = update.callback_query
+    data = query.data
+    now = datetime.datetime.now()
 
-        bot.send_message(message.from_user.id, "Привет, сейчас я расскажу тебе гороскоп на сегодня.")
+    # Обратите внимание: используется `effective_message`
+    chat_id = update.effective_message.chat_id
+    current_text = update.effective_message.text
 
-        # Готовим кнопки
+    if data == CALLBACK_BUTTON1_LEFT:
+        # "Удалим" клавиатуру у прошлого сообщения
+        # (на самом деле отредактируем его так, что текст останется тот же, а клавиатура пропадёт)
+        query.edit_message_text(
+            text=current_text,
+            parse_mode=ParseMode.MARKDOWN,
+        )
+        # Отправим новое сообщение при нажатии на кнопку
+        context.bot.send_message(
+            chat_id=chat_id,
+            text="Новое сообщение\n\ncallback_query.data={}".format(data),
+            reply_markup=get_base_inline_keyboard(),
+        )
+    elif data == CALLBACK_BUTTON2_RIGHT:
+        # Отредактируем текст сообщения, но оставим клавиатуру
+        query.edit_message_text(
+            text="Успешно отредактировано в {}".format(now),
+            reply_markup=get_base_inline_keyboard(),
+        )
+    elif data == CALLBACK_BUTTON3_MORE:
+        # Показать следующий экран клавиатуры
+        # (оставить тот же текст, но указать другой массив кнопок)
+        query.edit_message_text(
+            text=current_text,
+            reply_markup=get_keyboard2(),
+        )
+    elif data == CALLBACK_BUTTON4_BACK:
+        # Показать предыдущий экран клавиатуры
+        # (оставить тот же текст, но указать другой массив кнопок)
+        query.edit_message_text(
+            text=current_text,
+            reply_markup=get_base_inline_keyboard(),
+        )
+    elif data == CALLBACK_BUTTON5_TIME:
+        # Покажем новый текст и оставим ту же клавиатуру
+        text = "*Точное время*\n\n{}".format(now)
+        query.edit_message_text(
+            text=text,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=get_keyboard2(),
+        )
+    elif data in (CALLBACK_BUTTON6_PRICE, CALLBACK_BUTTON7_PRICE, CALLBACK_BUTTON8_PRICE):
+        pair = {
+            CALLBACK_BUTTON6_PRICE: "USD-BTC",
+            CALLBACK_BUTTON7_PRICE: "USD-LTC",
+            CALLBACK_BUTTON8_PRICE: "USD-ETH",
+        }[data]
 
-        keyboard = types.InlineKeyboardMarkup()
+        try:
+            current_price = client.get_last_price(pair=pair)
+            text = "*Курс валюты:*\n\n*{}* = {}$".format(pair, current_price)
+        except BittrexError:
+            text = "Произошла ошибка :(\n\nПопробуйте ещё раз"
+        query.edit_message_text(
+            text=text,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=get_keyboard2(),
+        )
+    elif data == CALLBACK_BUTTON_HIDE_KEYBOARD:
+        # Спрятать клавиатуру
+        # Работает только при отправке нового сообщение
+        # Можно было бы отредактировать, но тогда нужно точно знать что у сообщения не было кнопок
+        context.bot.send_message(
+            chat_id=chat_id,
+            text="Спрятали клавиатуру\n\nНажмите /start чтобы вернуть её обратно",
+            reply_markup=ReplyKeyboardRemove(),
+        )
 
-        # По очереди готовим текст и обработчик для каждого знака зодиака
 
-        key_oven = types.InlineKeyboardButton(text='Овен', callback_data='zodiac')
+@debug_requests
+def do_start(update: Update, context: CallbackContext):
+    update.message.reply_text(
+        text="Привет! Отправь мне что-нибудь",
+        reply_markup=get_base_reply_keyboard(),
+    )
 
-        # И добавляем кнопку на экран
 
-        keyboard.add(key_oven)
+@debug_requests
+def do_help(update: Update, context: CallbackContext):
+    update.message.reply_text(
+        text="Это учебный бот\n\n"
+             "Список доступных команд есть в меню\n\n"
+             "Так же я отвечую на любое сообщение",
+        reply_markup=get_base_inline_keyboard(),
+    )
 
-        key_telec = types.InlineKeyboardButton(text='Телец', callback_data='zodiac')
 
-        keyboard.add(key_telec)
-
-        key_bliznecy = types.InlineKeyboardButton(text='Близнецы', callback_data='zodiac')
-
-        keyboard.add(key_bliznecy)
-
-        key_rak = types.InlineKeyboardButton(text='Рак', callback_data='zodiac')
-
-        keyboard.add(key_rak)
-
-        key_lev = types.InlineKeyboardButton(text='Лев', callback_data='zodiac')
-
-        keyboard.add(key_lev)
-
-        key_deva = types.InlineKeyboardButton(text='Дева', callback_data='zodiac')
-
-        keyboard.add(key_deva)
-
-        key_vesy = types.InlineKeyboardButton(text='Весы', callback_data='zodiac')
-
-        keyboard.add(key_vesy)
-
-        key_scorpion = types.InlineKeyboardButton(text='Скорпион', callback_data='zodiac')
-
-        keyboard.add(key_scorpion)
-
-        key_strelec = types.InlineKeyboardButton(text='Стрелец', callback_data='zodiac')
-
-        keyboard.add(key_strelec)
-
-        key_kozerog = types.InlineKeyboardButton(text='Козерог', callback_data='zodiac')
-
-        keyboard.add(key_kozerog)
-
-        key_vodoley = types.InlineKeyboardButton(text='Водолей', callback_data='zodiac')
-
-        keyboard.add(key_vodoley)
-
-        key_ryby = types.InlineKeyboardButton(text='Рыбы', callback_data='zodiac')
-
-        keyboard.add(key_ryby)
-
-        # Показываем все кнопки сразу и пишем сообщение о выборе
-
-        bot.send_message(message.from_user.id, text='Выбери свой знак зодиака', reply_markup=keyboard)
-
-    elif message.text == "/help":
-
-        bot.send_message(message.from_user.id, "Напиши Привет")
-
+@debug_requests
+def do_time(update: Update, context: CallbackContext):
+    """ Узнать серверное время
+        Работает только на Unix-системах!
+    """
+    process = Popen(["date"], stdout=PIPE)
+    text, error = process.communicate()
+    # Может произойти ошибка вызова процесса (код возврата не 0)
+    if error:
+        text = "Произошла ошибка, время неизвестно"
     else:
+        # Декодировать ответ команды из процесса
+        text = text.decode("utf-8")
+    update.message.reply_text(
+        text=text,
+        reply_markup=get_base_inline_keyboard(),
+    )
 
-        bot.send_message(message.from_user.id, "Я тебя не понимаю. Напиши /help.")
 
- 
-# Обработчик нажатий на кнопки
+@debug_requests
+def do_echo(update: Update, context: CallbackContext):
+    chat_id = update.message.chat_id
+    text = update.message.text
+    if text == BUTTON1_HELP:
+        return do_help(update=update, context=context)
+    elif text == BUTTON2_TIME:
+        return do_time(update=update, context=context)
+    else:
+        reply_text = "Ваш ID = {}\n\n{}".format(chat_id, text)
+        update.message.reply_text(
+            text=reply_text,
+            reply_markup=get_base_inline_keyboard(),
+        )
 
-@bot.callback_query_handler(func=lambda call: True)
 
-def callback_worker(call):
+def main():
+    logger.info("Запускаем бота...")
 
-    # Если нажали на одну из 12 кнопок — выводим гороскоп
+    req = Request(
+        connect_timeout=0.5,
+        read_timeout=1.0,
+    )
+    bot = Bot(
+        token=config.TG_TOKEN,
+        request=req,
+        base_url=config.TG_API_URL,
+    )
+    updater = Updater(
+        bot=bot,
+        use_context=True,
+    )
 
-    if call.data == "zodiac": 
+    # Проверить что бот корректно подключился к Telegram API
+    info = bot.get_me()
+    logger.info(f'Bot info: {info}')
 
-        # Формируем гороскоп
+    # Навесить обработчики команд
+    start_handler = CommandHandler("start", do_start)
+    help_handler = CommandHandler("help", do_help)
+    time_handler = CommandHandler("time", do_time)
+    message_handler = MessageHandler(Filters.text, do_echo)
+    buttons_handler = CallbackQueryHandler(callback=keyboard_callback_handler)
 
-        msg = random.choice(first) + ' ' + random.choice(second) + ' ' + random.choice(second_add) + ' ' + random.choice(third)
+    updater.dispatcher.add_handler(start_handler)
+    updater.dispatcher.add_handler(help_handler)
+    updater.dispatcher.add_handler(time_handler)
+    updater.dispatcher.add_handler(message_handler)
+    updater.dispatcher.add_handler(buttons_handler)
 
-        # Отправляем текст в Телеграм
+    # Начать бесконечную обработку входящих сообщений
+    updater.start_polling()
+    updater.idle()
 
-        bot.send_message(call.message.chat.id, msg)
+    logger.info("Закончили...")
 
- 
-# Запускаем постоянный опрос бота в Телеграме
 
-bot.polling(none_stop=True, interval=0)
+if __name__ == '__main__':
+    main()
