@@ -58,7 +58,7 @@ TITLES = {
     CALLBACK_BUTTON_HIDE_KEYBOARD: "Спрять клавиатуру",
 }
 
-# Глобально инициализируем клиент API Bittrex
+ #Глобально инициализируем клиент API Bittrex
 #client = BittrexClient()
 
 
@@ -223,19 +223,19 @@ def do_start(update: Update, context: CallbackContext):
 
 
 
-def do_echo(update: Update, context: CallbackContext):
-    chat_id = update.message.chat_id
-    text = update.message.text
-    if text == BUTTON1_HELP:
-        return do_help(update=update, context=context)
-    elif text == BUTTON2_TIME:
-        return do_time(update=update, context=context)
-    else:
-        reply_text = "Ваш ID = {}\n\n{}".format(chat_id, text)
-        update.message.reply_text(
-            text=reply_text,
-            reply_markup=get_base_inline_keyboard(),
-        )
+# def do_echo(update: Update, context: CallbackContext):
+ #   chat_id = update.message.chat_id
+ #   text = update.message.text
+ #   if text == BUTTON1_HELP:
+ #       return do_help(update=update, context=context)
+ #   elif text == BUTTON2_TIME:
+ #       return do_time(update=update, context=context)
+ #   else:
+ #       reply_text = "Ваш ID = {}\n\n{}".format(chat_id, text)
+ #       update.message.reply_text(
+ #           text=reply_text,
+ #           reply_markup=get_base_inline_keyboard(),
+  #      )
 
 
 def main():
@@ -243,14 +243,12 @@ def main():
         token="1107014943:AAH_4PpKGwsBlfGUXIcYIKJsA-F2g0BAonI",
        
     )
-    updater = Updater(
-        bot=bot,
-    )
+  
 
     
     # Навесить обработчики команд
     start_handler = CommandHandler("start", do_start)
-    help_handler = CommandHandler("help", do_help)
+    #help_handler = CommandHandler("help", do_help)
     time_handler = CommandHandler("time", do_time)
     message_handler = MessageHandler(Filters.text, do_echo)
     buttons_handler = CallbackQueryHandler(callback=keyboard_callback_handler)
@@ -268,5 +266,5 @@ def main():
     #logger.info("Закончили...")
 
 
-if __name__ == '__main__':
-   main()
+#if __name__ == '__main__':
+  #  main()
