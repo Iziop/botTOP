@@ -15,7 +15,7 @@ from telegram.ext import CommandHandler
 from telegram.ext import MessageHandler
 from telegram.ext import Filters
 from telegram.ext import CallbackQueryHandler
-from telegram.utils.request import Request
+#from telegram.utils.request import Request
 
 #from apis.bittrex import BittrexClient
 #from apis.bittrex import BittrexError
@@ -188,38 +188,38 @@ def keyboard_callback_handler(update: Update, context: CallbackContext):
 
 def do_start(update: Update, context: CallbackContext):
     update.message.reply_text(
-        text="Привет! Отправь мне что-нибудь",
+        text="Привет!",
         reply_markup=get_base_reply_keyboard(),
     )
 
 
 
-def do_help(update: Update, context: CallbackContext):
-    update.message.reply_text(
-        text="Это учебный бот\n\n"
-             "Список доступных команд есть в меню\n\n"
-             "Так же я отвечую на любое сообщение",
-        reply_markup=get_base_inline_keyboard(),
-    )
+# def do_help(update: Update, context: CallbackContext):
+#     update.message.reply_text(
+ #        text="Это учебный бот\n\n"
+#              "Список доступных команд есть в меню\n\n"
+ #             "Так же я отвечую на любое сообщение",
+ #        reply_markup=get_base_inline_keyboard(),
+ #    )
 
 
 
-def do_time(update: Update, context: CallbackContext):
+# def do_time(update: Update, context: CallbackContext):
     """ Узнать серверное время
         Работает только на Unix-системах!
     """
-    process = Popen(["date"], stdout=PIPE)
-    text, error = process.communicate()
+#     process = Popen(["date"], stdout=PIPE)
+#    text, error = process.communicate()
     # Может произойти ошибка вызова процесса (код возврата не 0)
-    if error:
-        text = "Произошла ошибка, время неизвестно"
-    else:
+#     if error:
+#         text = "Произошла ошибка, время неизвестно"
+#     else:
         # Декодировать ответ команды из процесса
-        text = text.decode("utf-8")
-    update.message.reply_text(
-        text=text,
-        reply_markup=get_base_inline_keyboard(),
-    )
+#         text = text.decode("utf-8")
+#     update.message.reply_text(
+#         text=text,
+ #        reply_markup=get_base_inline_keyboard(),
+#     )
 
 
 
@@ -239,34 +239,27 @@ def do_echo(update: Update, context: CallbackContext):
 
 
 def main():
-    logger.info("Запускаем бота...")
-
-    req = Request(
-        connect_timeout=0.5,
-        read_timeout=1.0,
-    )
     bot = Bot(
-        token=config.TG_TOKEN,
-        request=req,
+        token="1107014943:AAH_4PpKGwsBlfGUXIcYIKJsA-F2g0BAonI",
+       
     )
     updater = Updater(
         bot=bot,
-        use_context=True,
     )
 
     
     # Навесить обработчики команд
-    #start_handler = CommandHandler("start", do_start)
-    #help_handler = CommandHandler("help", do_help)
-    #time_handler = CommandHandler("time", do_time)
-    #message_handler = MessageHandler(Filters.text, do_echo)
-    #buttons_handler = CallbackQueryHandler(callback=keyboard_callback_handler)
+    start_handler = CommandHandler("start", do_start)
+    help_handler = CommandHandler("help", do_help)
+    time_handler = CommandHandler("time", do_time)
+    message_handler = MessageHandler(Filters.text, do_echo)
+    buttons_handler = CallbackQueryHandler(callback=keyboard_callback_handler)
 
-    #updater.dispatcher.add_handler(start_handler)
-    #updater.dispatcher.add_handler(help_handler)
-    #updater.dispatcher.add_handler(time_handler)
-    #updater.dispatcher.add_handler(message_handler)
-    #updater.dispatcher.add_handler(buttons_handler)
+    updater.dispatcher.add_handler(start_handler)
+    updater.dispatcher.add_handler(help_handler)
+    updater.dispatcher.add_handler(time_handler)
+    updater.dispatcher.add_handler(message_handler)
+    updater.dispatcher.add_handler(buttons_handler)
 
     # Начать бесконечную обработку входящих сообщений
     updater.start_polling()
