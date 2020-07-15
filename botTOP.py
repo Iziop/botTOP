@@ -59,7 +59,7 @@ TITLES = {
 }
 
 # Глобально инициализируем клиент API Bittrex
-client = BittrexClient()
+#client = BittrexClient()
 
 
 def get_base_inline_keyboard():
