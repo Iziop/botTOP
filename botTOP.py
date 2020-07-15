@@ -1,7 +1,7 @@
 import datetime
-from logging import getLogger
-from subprocess import Popen
-from subprocess import PIPE
+#from logging import getLogger
+#from subprocess import Popen
+#from subprocess import PIPE
 
 from telegram import Bot
 from telegram import Update
@@ -17,20 +17,20 @@ from telegram.ext import Filters
 from telegram.ext import CallbackQueryHandler
 from telegram.utils.request import Request
 
-from apis.bittrex import BittrexClient
-from apis.bittrex import BittrexError
-from echo.config import load_config
-from echo.buttons import BUTTON1_HELP
-from echo.buttons import BUTTON2_TIME
-from echo.buttons import get_base_reply_keyboard
-from echo.utils import logger_factory
+#from apis.bittrex import BittrexClient
+#from apis.bittrex import BittrexError
+#from config import load_config
+#from buttons import BUTTON1_HELP
+#from buttons import BUTTON2_TIME
+#from buttons import get_base_reply_keyboard
 
 
-config = load_config()
 
-logger = getLogger(__name__)
+#config = load_config()
 
-debug_requests = logger_factory(logger=logger)
+#logger = getLogger(__name__)
+
+#debug_requests = logger_factory(logger=logger)
 
 
 # `callback_data` -- это то, что будет присылать TG при нажатии на каждую кнопку.
@@ -104,7 +104,7 @@ def get_keyboard2():
     return InlineKeyboardMarkup(keyboard)
 
 
-@debug_requests
+
 def keyboard_callback_handler(update: Update, context: CallbackContext):
     """ Обработчик ВСЕХ кнопок со ВСЕХ клавиатур
     """
@@ -185,7 +185,7 @@ def keyboard_callback_handler(update: Update, context: CallbackContext):
         )
 
 
-@debug_requests
+
 def do_start(update: Update, context: CallbackContext):
     update.message.reply_text(
         text="Привет! Отправь мне что-нибудь",
@@ -193,7 +193,7 @@ def do_start(update: Update, context: CallbackContext):
     )
 
 
-@debug_requests
+
 def do_help(update: Update, context: CallbackContext):
     update.message.reply_text(
         text="Это учебный бот\n\n"
@@ -203,7 +203,7 @@ def do_help(update: Update, context: CallbackContext):
     )
 
 
-@debug_requests
+
 def do_time(update: Update, context: CallbackContext):
     """ Узнать серверное время
         Работает только на Unix-системах!
@@ -222,7 +222,7 @@ def do_time(update: Update, context: CallbackContext):
     )
 
 
-@debug_requests
+
 def do_echo(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
     text = update.message.text
@@ -246,38 +246,34 @@ def main():
         read_timeout=1.0,
     )
     bot = Bot(
-        token="1107014943:AAH_4PpKGwsBlfGUXIcYIKJsA-F2g0BAonI",
+        token=config.TG_TOKEN,
         request=req,
-        #/base_url=config.TG_API_URL,/
     )
     updater = Updater(
         bot=bot,
         use_context=True,
     )
 
-    # Проверить что бот корректно подключился к Telegram API
-    info = bot.get_me()
-    logger.info(f'Bot info: {info}')
-
+    
     # Навесить обработчики команд
-    start_handler = CommandHandler("start", do_start)
-    help_handler = CommandHandler("help", do_help)
-    time_handler = CommandHandler("time", do_time)
-    message_handler = MessageHandler(Filters.text, do_echo)
-    buttons_handler = CallbackQueryHandler(callback=keyboard_callback_handler)
+    #start_handler = CommandHandler("start", do_start)
+    #help_handler = CommandHandler("help", do_help)
+    #time_handler = CommandHandler("time", do_time)
+    #message_handler = MessageHandler(Filters.text, do_echo)
+    #buttons_handler = CallbackQueryHandler(callback=keyboard_callback_handler)
 
-    updater.dispatcher.add_handler(start_handler)
-    updater.dispatcher.add_handler(help_handler)
-    updater.dispatcher.add_handler(time_handler)
-    updater.dispatcher.add_handler(message_handler)
-    updater.dispatcher.add_handler(buttons_handler)
+    #updater.dispatcher.add_handler(start_handler)
+    #updater.dispatcher.add_handler(help_handler)
+    #updater.dispatcher.add_handler(time_handler)
+    #updater.dispatcher.add_handler(message_handler)
+    #updater.dispatcher.add_handler(buttons_handler)
 
     # Начать бесконечную обработку входящих сообщений
     updater.start_polling()
     updater.idle()
 
-    logger.info("Закончили...")
+    #logger.info("Закончили...")
 
 
-if __name__ == '__main__':
-    main()
+#if __name__ == '__main__':
+  #  main()
