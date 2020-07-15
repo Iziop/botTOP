@@ -125,7 +125,7 @@ def callback_worker(call):
 
         # Формируем гороскоп
 
-        msg = random.choice(first) + ' ' + random.choice(second) + ' ' + random.choice(second_add) + ' ' + random.choice(third)
+        msg = "Насть прости еще разок. Я пониммаю, что ты забила. Однако также понимаю, что осадок есть. Хочу чтобы самая красивая девушка улыбнулась :чмок"
 
         # Отправляем текст в Телеграм
 
