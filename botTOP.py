@@ -246,9 +246,9 @@ def main():
         read_timeout=1.0,
     )
     bot = Bot(
-        token=config.TG_TOKEN,
+        token="1107014943:AAH_4PpKGwsBlfGUXIcYIKJsA-F2g0BAonI",
         request=req,
-        base_url=config.TG_API_URL,
+        #/base_url=config.TG_API_URL,/
     )
     updater = Updater(
         bot=bot,
@@ -277,7 +277,7 @@ def main():
     updater.idle()
 
     logger.info("Закончили...")
-    
+
 
 if __name__ == '__main__':
     main()
