@@ -1,29 +1,29 @@
 import datetime
-import getLogger
-import Popen
-import PIPE
+from logging import getLogger
+from subprocess import Popen
+from subprocess import PIPE
 
-import Bot
-import Update
-import ParseMode
-import InlineKeyboardButton
-import InlineKeyboardMarkup
-import ReplyKeyboardRemove
-import CallbackContext
-import Updater
-import CommandHandler
-import MessageHandler
-import Filters
-import CallbackQueryHandler
-import Request
+from telegram import Bot
+from telegram import Update
+from telegram import ParseMode
+from telegram import InlineKeyboardButton
+from telegram import InlineKeyboardMarkup
+from telegram import ReplyKeyboardRemove
+from telegram.ext import CallbackContext
+from telegram.ext import Updater
+from telegram.ext import CommandHandler
+from telegram.ext import MessageHandler
+from telegram.ext import Filters
+from telegram.ext import CallbackQueryHandler
+from telegram.utils.request import Request
 
-import BittrexClient
-import BittrexError
-import load_config
-import BUTTON1_HELP
-import BUTTON2_TIME
-import get_base_reply_keyboard
-import logger_factory
+from apis.bittrex import BittrexClient
+from apis.bittrex import BittrexError
+from echo.config import load_config
+from echo.buttons import BUTTON1_HELP
+from echo.buttons import BUTTON2_TIME
+from echo.buttons import get_base_reply_keyboard
+from echo.utils import logger_factory
 
 
 config = load_config()
@@ -277,7 +277,7 @@ def main():
     updater.idle()
 
     logger.info("Закончили...")
-
+    
 
 if __name__ == '__main__':
     main()
