@@ -38,7 +38,7 @@ def get_text_messages(message):
 
     # Если написали «Привет»
 
-    if message.text == "Привет":
+    if message.text == "/start":
 
         # Пишем приветствие
 
@@ -125,7 +125,7 @@ def callback_worker(call):
 
         # Формируем гороскоп
 
-        msg = "Насть прости еще разок. Я пониммаю, что ты забила. Однако также понимаю, что осадок есть. Хочу чтобы самая красивая девушка улыбнулась :чмок"
+        msg = random.choice(first) + ' ' + random.choice(second) + ' ' + random.choice(second_add) + ' ' + random.choice(third)
 
         # Отправляем текст в Телеграм
 
