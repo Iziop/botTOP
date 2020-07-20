@@ -1,6 +1,6 @@
 import telebot
 import random
-
+ 
 from telebot import types
 from string import Template 
 bot = telebot.TeleBot("1107014943:AAH_4PpKGwsBlfGUXIcYIKJsA-F2g0BAonI")
