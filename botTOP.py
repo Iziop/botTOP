@@ -87,7 +87,7 @@ def process_carDate_step(message):
                     # ваша заявка "Имя пользователя"
                     bot.send_message(chat_id, getRegData(user, 'Ваша заявка', message.from_user.first_name), parse_mode="Markdown", reply_markup=markup)
                     # отправить в группу
-                    bot.send_message(-1193429892, getRegData(user, 'Заявка от бота', bot.get_me().username), parse_mode="Markdown")
+                    bot.send_message(1193429892, getRegData(user, 'Заявка от бота', bot.get_me().username), parse_mode="Markdown")
 
                 except Exception as e:
                     bot.reply_to(message, 'ooops!!1')       
@@ -130,7 +130,7 @@ def welcome(message):
  
         markup.add(item1, item2, item3, item4)
  
-        bot.send_message(message.chat.id, "Добро пожаловать, {0.first_name}!\nЯ - {1.first_name} Bot, бот созданный, чтобы очистить Ваше понимаение о\nTop Cleaning Service.".format(message.from_user, bot.get_me()),
+        bot.send_message(message.chat.id, "Добро пожаловать, {0.first_name}!\nЯ - {1.first_name} Bot, бот созданный, чтобы очистить Ваше понимаение о Top Cleaning Service.".format(message.from_user, bot.get_me()),
          reply_markup=markup)
  
 @bot.message_handler(content_types=['text'])
