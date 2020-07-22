@@ -66,7 +66,7 @@ def process_driverSeria_step(message):
                     user = user_dict[chat_id]
                     user.driverSeria = message.text
 
-                    msg = bot.send_message(chat_id, 'Услга которая Вам нужна')
+                    msg = bot.send_message(chat_id, 'Услуга которая Вам нужна')
                     bot.register_next_step_handler(msg, process_carDate_step)
 
                 except Exception as e:
@@ -87,7 +87,7 @@ def process_carDate_step(message):
                     # ваша заявка "Имя пользователя"
                     bot.send_message(chat_id, getRegData(user, 'Ваша заявка', message.from_user.first_name), parse_mode="Markdown", reply_markup=markup)
                     # отправить в группу
-                    bot.send_message(-443388815, getRegData(user, 'Заявка от бота', bot.get_me().username), parse_mode="Markdown")
+                    bot.send_message(-1193429892, getRegData(user, 'Заявка от бота', bot.get_me().username), parse_mode="Markdown")
 
                 except Exception as e:
                     bot.reply_to(message, 'ooops!!1')       
@@ -190,7 +190,7 @@ def lalala(message):
 
             
         else:
-            bot.send_message(message.chat.id, 'Я не знаю что ответить 😢')
+            bot.send_message(message.chat.id, 'По всем вопросам звоните +77713008828 Балжан')
  
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
