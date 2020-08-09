@@ -81,7 +81,7 @@ def process_carDate_step(message):
                     item1 = types.KeyboardButton("🧹 Услуги")
                     item2 = types.KeyboardButton("📈 Акции")
                     item3 = types.KeyboardButton("📞 Контакты")
-                    item4 = types.KeyboardButton("📝 Анкета")
+                    item4 = types.KeyboardButton("📝 Заявка")
 
                     markup.add(item1, item2, item3, item4)
                     # ваша заявка "Имя пользователя"
@@ -126,11 +126,11 @@ def welcome(message):
         item1 = types.KeyboardButton("🧹 Услуги")
         item2 = types.KeyboardButton("📈 Акции")
         item3 = types.KeyboardButton("📞 Контакты")
-        item4 = types.KeyboardButton("📝 Анкета")
+        item4 = types.KeyboardButton("📝 Заявка")
  
         markup.add(item1, item2, item3, item4)
  
-        bot.send_message(message.chat.id, "Добро пожаловать, {0.first_name}!\nЯ - {1.first_name} Bot, бот созданный, чтобы очистить Ваше понимаение о Top Cleaning Service.".format(message.from_user, bot.get_me()),
+        bot.send_message(message.chat.id, "Добро пожаловать, {0.first_name}!\nЯ - {1.first_name} Bot, созданный, чтобы ответить на вопросы о Top Cleaning Group.".format(message.from_user, bot.get_me()),
          reply_markup=markup)
  
 @bot.message_handler(content_types=['text'])
@@ -174,7 +174,7 @@ def lalala(message):
             bot.send_message(message.chat.id, "🔘 Каждая 5-ая чистка эскалаторов и траволаторов в подарок\n🔘 Постоянным клиентам скидка до 30%\n🔘 Ген Уборка и чистка мебели -20%\n🔘 Подарочный сертификат на любые услуги клининга", reply_markup=None)
         elif message.text == '📞 Контакты':
             bot.send_message(message.chat.id, "📲 +7 (727) 311 86 17\n📲 +7 (727) 269 54 00\n📲 +7 (771) 300 88 30\n📩 sales@topcs.kz\n🌎 topcs.kz", reply_markup=None)
-        elif message.text == '📝 Анкета':
+        elif message.text == '📝 Заявка':
 
             
             markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
